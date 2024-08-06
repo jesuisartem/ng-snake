@@ -3,6 +3,7 @@
     <div
       *ngFor="let cell of line"
       [class.grid-line__cell_food]="cell.is_food"
+      [class.grid-line__cell_snake]="cell.is_snake"
       class="grid-line__cell"
     ></div>
   </div>

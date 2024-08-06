@@ -23,10 +23,10 @@ export class GridComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.createGrid(5);
     this.createSnake();
+    this.createGrid(5);
     this.addFood();
-    this.moveSnake()
+    this.onSnakeLengthChange();
   }
 
   private createGrid(size: number): void {
@@ -44,11 +44,17 @@ export class GridComponent implements OnInit {
 
   private createSnake(): void {
     const newSnake: Snake = {
-      length: 1,
+      length: 2,
       cells: [
         {
-          x: 0,
-          y: 0,
+          x: 1,
+          y: 1,
+          is_head: true,
+          is_tail: false,
+        },
+        {
+          x: 1,
+          y: 2,
           is_head: true,
           is_tail: false,
         }
@@ -92,6 +98,28 @@ export class GridComponent implements OnInit {
     if (!direction) return;
     // логика передвижения змейки
 
+  }
+
+  private onSnakeLengthChange(): void {
+    this.snake$
+      .pipe()
+      .subscribe(snake => this.setSnakeCellsOnGrid(snake));
+  }
+
+  private setSnakeCellsOnGrid(snake: Snake | null): void {
+    const grid = this.grid$.getValue();
+    if (!grid) return;
+    if (!snake || !snake.length) {
+      grid.cells.forEach(line => line.map(cell => ({
+        ...cell,
+        is_snake: false,
+      })));
+    } else {
+      for (const coords of snake.cells.map(cell => [cell.x, cell.y])) {
+        grid.cells[coords[0]][coords[1]].is_snake = true;
+      }
+      this.grid$.next(grid);
+    }
   }
 
 }
