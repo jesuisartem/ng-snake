@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {Grid} from "../../interfaces/grid";
-import {BehaviorSubject, Subject  } from "rxjs";
+import {BehaviorSubject, filter, first, Subject} from "rxjs";
 import {Snake} from "../../interfaces/snake";
 import {Direction} from "../../interfaces/direction";
 
@@ -23,10 +23,12 @@ export class GridComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.createSnake();
-    this.createGrid(5);
-    this.addFood();
+    this.initFood();
+    this.addFoodOnEat();
     this.onSnakeLengthChange();
+
+    this.createGrid(5);
+    this.createSnake();
   }
 
   private createGrid(size: number): void {
@@ -37,8 +39,6 @@ export class GridComponent implements OnInit {
         is_snake: false,
       }))),
     };
-    const foodCoords = this.getRandomCellCoords(size);
-    newGrid.cells[foodCoords[0]][foodCoords[1]].is_food = true;
     this.grid$.next(newGrid);
   }
 
@@ -63,10 +63,19 @@ export class GridComponent implements OnInit {
     this.snake$.next(newSnake);
   }
 
-  private addFood(): void {
+  private addFoodOnEat(): void {
     this.foodEaten$
       .pipe()
       .subscribe(_ => this.addFoodToGrid());
+  }
+
+  private initFood(): void {
+    this.snake$
+      .pipe(
+        filter(snake => !!snake),
+        first(),
+      )
+      .subscribe(() => this.addFoodToGrid());
   }
 
   private addFoodToGrid(): void {
@@ -74,11 +83,15 @@ export class GridComponent implements OnInit {
     const snake = this.snake$.getValue();
     if (!currentGrid || !snake) return;
     this.removeFood(currentGrid);
-    const foodCoords = this.getRandomCellCoords(currentGrid.size);
-    if (!snake.cells.find(snakeCell => foodCoords[0] === snakeCell.x && foodCoords[1] === snakeCell.y)) {
-      currentGrid.cells[foodCoords[0]][foodCoords[1]].is_food = true;
-      this.foodCoords$.next(foodCoords);
-    }
+    let foodCoords: [number, number];
+
+    do {
+      foodCoords = this.getRandomCellCoords(currentGrid.size)
+      console.log(snake, foodCoords);
+    } while (snake.cells.find(snakeCell => foodCoords[0] === snakeCell.x && foodCoords[1] === snakeCell.y))
+
+    currentGrid.cells[foodCoords[0]][foodCoords[1]].is_food = true;
+    this.foodCoords$.next(foodCoords);
     this.grid$.next(currentGrid);
   }
 
@@ -102,7 +115,9 @@ export class GridComponent implements OnInit {
 
   private onSnakeLengthChange(): void {
     this.snake$
-      .pipe()
+      .pipe(
+        filter(snake => !!snake),
+      )
       .subscribe(snake => this.setSnakeCellsOnGrid(snake));
   }
 
@@ -121,5 +136,4 @@ export class GridComponent implements OnInit {
       this.grid$.next(grid);
     }
   }
-
 }
