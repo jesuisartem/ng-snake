@@ -1,0 +1,9 @@
+<div *ngIf="(grid$ | async) as grid" class="grid-wrapper">
+  <div *ngFor="let line of grid.cells" class="grid-line">
+    <div
+      *ngFor="let cell of line"
+      [class.grid-line__cell_food]="cell.is_food"
+      class="grid-line__cell"
+    ></div>
+  </div>
+</div>
