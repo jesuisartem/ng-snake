@@ -1,8 +1,8 @@
 enum Direction {
-  Up = 'up',
-  Right = 'right',
-  Down = 'down',
-  Left = 'left',
+  Up = 'ArrowUp',
+  Right = 'ArrowRight',
+  Down = 'ArrowDown',
+  Left = 'ArrowLeft',
 }
 
 export {

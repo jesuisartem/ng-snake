@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, HostListener, OnInit} from '@angular/core';
 import {Grid} from "../../interfaces/grid";
 import {BehaviorSubject, filter, first, Subject} from "rxjs";
 import {Snake} from "../../interfaces/snake";
@@ -29,6 +29,18 @@ export class GridComponent implements OnInit {
 
     this.createGrid(5);
     this.createSnake();
+  }
+
+  @HostListener('window:keydown',['$event'])
+  public handleKeyDown(event: KeyboardEvent) {
+    const direction = Object.keys(Direction)[Object.values(Direction).indexOf(event.key as Direction)];
+    if (this.isDirection(direction)) {
+      this.currentDirection$.next(direction)
+    }
+  }
+
+  private isDirection(string: string): string is Direction {
+    return Object.keys(Direction).includes(string);
   }
 
   private createGrid(size: number): void {
@@ -87,7 +99,6 @@ export class GridComponent implements OnInit {
 
     do {
       foodCoords = this.getRandomCellCoords(currentGrid.size)
-      console.log(snake, foodCoords);
     } while (snake.cells.find(snakeCell => foodCoords[0] === snakeCell.x && foodCoords[1] === snakeCell.y))
 
     currentGrid.cells[foodCoords[0]][foodCoords[1]].is_food = true;
