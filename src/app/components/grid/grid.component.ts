@@ -27,20 +27,21 @@ export class GridComponent implements OnInit {
     this.addFoodOnEat();
     this.onSnakeLengthChange();
 
-    this.createGrid(5);
+    this.createGrid(10);
     this.createSnake();
   }
 
   @HostListener('window:keydown',['$event'])
   public handleKeyDown(event: KeyboardEvent) {
-    const direction = Object.keys(Direction)[Object.values(Direction).indexOf(event.key as Direction)];
+    const direction = event.key;
     if (this.isDirection(direction)) {
-      this.currentDirection$.next(direction)
+      this.currentDirection$.next(direction);
+      this.moveSnake(direction);
     }
   }
 
   private isDirection(string: string): string is Direction {
-    return Object.keys(Direction).includes(string);
+    return Object.values(Direction).includes(string as Direction);
   }
 
   private createGrid(size: number): void {
@@ -67,7 +68,7 @@ export class GridComponent implements OnInit {
         {
           x: 1,
           y: 2,
-          is_head: true,
+          is_head: false,
           is_tail: false,
         }
       ]
@@ -117,10 +118,41 @@ export class GridComponent implements OnInit {
     return [Math.floor(Math.random() * max), Math.floor(Math.random() * max)];
   }
 
-  private moveSnake(): void {
-    const direction = this.currentDirection$.getValue();
-    if (!direction) return;
-    // логика передвижения змейки
+  private moveSnake(direction: Direction): void {
+    const snake = this.snake$.getValue();
+    if (!snake) return;
+    if (direction === Direction.Up) this.moveUp(snake);
+    if (direction === Direction.Down) this.moveDown(snake);
+    if (direction === Direction.Right) this.moveRight(snake);
+    if (direction === Direction.Left) this.moveLeft(snake);
+  }
+
+  private moveRight(snake: Snake): void {
+    snake.cells = snake.cells.map((cell, index) => {
+      if (!cell.is_head) {
+        cell = {
+          ...cell,
+          x: snake.cells[0].x - 1,
+          y: snake.cells[0].y,
+        }
+      } else {
+        cell.x = cell.x + 1;
+      }
+      return cell;
+    });
+    //console.log(snake)
+    this.snake$.next(snake);
+  }
+
+  private moveLeft(snake: Snake): void {
+
+  }
+
+  private moveUp(snake: Snake): void {
+
+  }
+
+  private moveDown(snake: Snake): void {
 
   }
 
@@ -135,16 +167,19 @@ export class GridComponent implements OnInit {
   private setSnakeCellsOnGrid(snake: Snake | null): void {
     const grid = this.grid$.getValue();
     if (!grid) return;
-    if (!snake || !snake.length) {
-      grid.cells.forEach(line => line.map(cell => ({
+    grid.cells = grid.cells.map(line => {
+      line = line.map(cell => ({
         ...cell,
         is_snake: false,
-      })));
-    } else {
+      }));
+      return line;
+    })
+    if (snake) {
       for (const coords of snake.cells.map(cell => [cell.x, cell.y])) {
+        console.log(coords)
         grid.cells[coords[0]][coords[1]].is_snake = true;
       }
-      this.grid$.next(grid);
     }
+    this.grid$.next(grid);
   }
 }
